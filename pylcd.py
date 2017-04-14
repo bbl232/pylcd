@@ -24,6 +24,7 @@ lcd_rows    = 2
 
 lcd = LCD.Adafruit_CharLCD(lcd_rs, lcd_en, lcd_d4, lcd_d5, lcd_d6, lcd_d7, lcd_columns, lcd_rows, lcd_bl, enable_pwm=True)
 lock = threading.RLock()
+action = threading.RLock()
 
 def scrolling_message(text, sltime):
   print("Scrolling message: " + text)
@@ -31,7 +32,7 @@ def scrolling_message(text, sltime):
   lcd.set_cursor(0,1)
   lcd.message("                ")
   lcd.set_cursor(0,1)
-  lcd.message(text)
+  lcd.message(text[0:16])
   lock.release()
   time.sleep(2.0)
   for i in range(0,len(text)-15):
@@ -66,21 +67,37 @@ def message(text, sltime=2.0):
 
 def button_1(channel):
   print("Button 1 press detcted")
-  message("HELLO THERE THIS IS A REALLY LONG MESSAGE USING A FUNCTION!")
+  if action.acquire(blocking=False):
+    message("HELLO THERE THIS IS A REALLY LONG MESSAGE USING A FUNCTION!")
+    action.release()
+  else:
+    print("Could not acquire action lock, skipping this button press.")
 
 def button_2(channel):
   print("Button 2 press detcted")
-  message("BTN2 is Unmapped")
+  if action.acquire(blocking=False):
+    message("BTN2 is Unmapped")
+    action.release()
+  else:
+    print("Could not acquire action lock, skipping this button press.")
 
 def button_3(channel):
   print("Button 3 press detcted")
-  message("BTN3 Unmapped")
+  if action.acquire(blocking=False):
+    message("BTN3 Unmapped")
+    action.release()
+  else:
+    print("Could not acquire action lock, skipping this button press.")
 
 def button_4(channel):
   global exit
   print("Button 4 press detcted... shutting down")
-  message("Looks like we're done here!")
-  exit = 1
+  if action.acquire(blocking=False):
+    message("Looks like we're done here!")
+    action.release()
+    exit = 1
+  else:
+    print("Could not acquire action lock, skipping this button press.")
 
 def main():
   global exit
